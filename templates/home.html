@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CalmMind</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+
+            background: 
+                url("{{ url_for('static', filename='images/home_bg.jpeg') }}");
+
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Overlay */
+        body::before {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            top: 0;
+            left: 0;
+        }
+
+        .container {
+            position: relative;
+            text-align: center;
+            max-width: 750px;
+            padding: 20px;
+            animation: fadeIn 1.5s ease-in-out;
+        }
+
+        /* ✅ BIGGER & STRONGER */
+        h1 {
+            font-size: 64px;   /* increased */
+            color: white;
+            margin-bottom: 20px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        /* ✅ MORE PROMINENT */
+        .tagline {
+            color: white;
+            font-size: 28px;   /* increased */
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        /* ✅ READABLE PARAGRAPH */
+        .subtext {
+            color: white;
+            font-size: 20px;   /* increased */
+            margin-bottom: 35px;
+            line-height: 1.8;
+        }
+
+        .btn {
+            padding: 18px 40px;   /* bigger button */
+            background: #6c63ff;
+            color: white;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 20px;   /* bigger */
+            transition: all 0.3s ease;
+            box-shadow: 0px 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            background: #574fd6;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0px 12px 20px rgba(0,0,0,0.3);
+        }
+
+        /* ✅ CLEAN TRUST TEXT */
+        .trust {
+            margin-top: 30px;
+            color: white;
+            font-size: 16px;   /* increased */
+        }
+
+        .trust span {
+            display: block;
+            margin-top: 8px;
+        }
+
+        
+        @media (max-width: 768px) {
+            body { height: auto; min-height: 100vh; padding: 20px; }
+            h1 { font-size: 38px !important; }
+            .tagline { font-size: 20px !important; }
+            .subtext { font-size: 16px !important; }
+            .btn { padding: 14px 28px !important; font-size: 17px !important; }
+            .container { max-width: 100%; }
+        }
+        @media (max-width: 480px) {
+            h1 { font-size: 30px !important; }
+        }
+
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(-30px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+    </style>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1>CalmMind</h1>
+
+    <div class="tagline">
+        Feeling a bit overwhelmed lately?
+    </div>
+
+    <div class="subtext">
+        This space is here to help you slow down, understand your thoughts,
+        and take small steps toward feeling better.  
+        No pressure, no judgement — just simple support whenever you need it.
+    </div>
+
+    <a href="/dashboard" class="btn">Start Assessment</a>
+
+    <div class="trust">
+        <span>✔ Private and safe to use</span>
+        <span>✔ Built for everyday mental clarity</span>
+        <span>✔ No sign-up required</span>
+    </div>
+</div>
+
+</body>
+</html>

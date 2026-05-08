@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommendations - CalmMind</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --purple: #6c63ff;
+            --purple-dark: #574fd6;
+            --teal: #00c9a7;
+            --bg: #f0f2ff;
+            --text: #1a1a2e;
+            --muted: #6b7280;
+            --sidebar-w: 220px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); display: flex; min-height: 100vh; }
+
+        .sidebar { width: var(--sidebar-w); background: var(--purple); min-height: 100vh; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; padding-top: 28px; z-index: 100; }
+        .sidebar .logo { color: white; font-family: 'DM Serif Display', serif; font-size: 22px; padding: 0 22px 24px; border-bottom: 1px solid rgba(255,255,255,0.2); margin-bottom: 10px; }
+        .sidebar a { color: rgba(255,255,255,0.85); padding: 13px 22px; text-decoration: none; font-size: 15px; font-weight: 500; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
+        .sidebar a:hover, .sidebar a.active { background: rgba(255,255,255,0.15); color: white; }
+
+        .main { margin-left: var(--sidebar-w); flex: 1; padding: 48px 56px; max-width: 1100px; }
+
+        .page-header { margin-bottom: 36px; }
+        .page-header h1 { font-family: 'DM Serif Display', serif; font-size: 42px; color: var(--text); }
+        .page-header p { color: var(--muted); font-size: 17px; margin-top: 10px; }
+
+        /* Status Banner */
+        #status-banner {
+            background: white;
+            border-radius: 20px;
+            padding: 28px 32px;
+            margin-bottom: 36px;
+            box-shadow: 0 4px 20px rgba(108,99,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .banner-emoji { font-size: 52px; }
+        .banner-info h2 { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--text); }
+        .banner-info p { color: var(--muted); font-size: 15px; margin-top: 6px; }
+        .banner-badge {
+            margin-left: auto;
+            padding: 10px 22px;
+            border-radius: 99px;
+            font-weight: 700;
+            font-size: 16px;
+            white-space: nowrap;
+        }
+        .banner-scores {
+            display: flex;
+            gap: 28px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+        .score-chip {
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--text);
+        }
+        .score-chip .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        /* Loading */
+        #loading-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 20px;
+        }
+        .spinner { width: 54px; height: 54px; border: 5px solid #e5e7ff; border-top-color: var(--purple); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 24px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #loading-state h3 { font-size: 20px; color: var(--text); margin-bottom: 8px; font-family: 'DM Serif Display', serif; }
+        #loading-state p { color: var(--muted); font-size: 15px; }
+
+        /* Recs Grid */
+        #recs-grid {
+            display: none;
+        }
+
+        .section-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 26px;
+            color: var(--text);
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .rec-card {
+            background: white;
+            border-radius: 18px;
+            padding: 26px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            transition: all 0.25s;
+            border-left: 4px solid transparent;
+            cursor: default;
+        }
+        .rec-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(108,99,255,0.12); }
+        
+        .card-icon { font-size: 36px; margin-bottom: 14px; }
+        .card-tag {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 99px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .card-title { font-weight: 700; font-size: 17px; color: var(--text); margin-bottom: 8px; }
+        .card-desc { font-size: 14px; color: var(--muted); line-height: 1.65; }
+        .card-action {
+            margin-top: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--purple);
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            transition: gap 0.2s;
+        }
+        .card-action:hover { gap: 10px; }
+
+        /* Daily Plan */
+        .daily-plan {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(108,99,255,0.08);
+            margin-bottom: 40px;
+        }
+        .plan-timeline {
+            margin-top: 24px;
+            display: grid;
+            gap: 0;
+        }
+        .plan-item {
+            display: flex;
+            gap: 18px;
+            padding: 16px 0;
+            border-bottom: 1px solid #f0eeff;
+            position: relative;
+        }
+        .plan-item:last-child { border-bottom: none; }
+        .plan-time {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--purple);
+            width: 90px;
+            flex-shrink: 0;
+            padding-top: 2px;
+        }
+        .plan-dot {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: var(--purple);
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+        .plan-text strong { font-size: 15px; color: var(--text); display: block; margin-bottom: 3px; }
+        .plan-text span { font-size: 13px; color: var(--muted); }
+        .plan-duration {
+            margin-left: auto;
+            font-size: 12px;
+            font-weight: 600;
+            background: #f0eeff;
+            color: var(--purple);
+            padding: 4px 12px;
+            border-radius: 99px;
+            height: fit-content;
+            white-space: nowrap;
+        }
+
+        /* CTA */
+        .cta-strip {
+            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+            border-radius: 20px;
+            padding: 32px 36px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .cta-strip h3 { font-family: 'DM Serif Display', serif; font-size: 24px; color: white; }
+        .cta-strip p { color: rgba(255,255,255,0.8); font-size: 15px; margin-top: 6px; }
+        .cta-btn {
+            background: white;
+            color: var(--purple);
+            font-weight: 700;
+            font-size: 15px;
+            padding: 14px 28px;
+            border-radius: 12px;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+
+        /* no-assessment notice */
+        #no-assessment {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 48px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(108,99,255,0.08);
+        }
+        #no-assessment h2 { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--text); margin: 20px 0 12px; }
+        #no-assessment p { color: var(--muted); font-size: 16px; margin-bottom: 28px; }
+        .btn-cta { display: inline-block; background: var(--purple); color: white; padding: 14px 32px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 16px; transition: all 0.2s; }
+        .btn-cta:hover { background: var(--purple-dark); transform: translateY(-2px); }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body>
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+
+<div class="sidebar" style="">
+    <div class="logo">🧠 CalmMind</div>
+    <a href="/">🏠 Home</a>
+    <a href="/dashboard">📊 Dashboard</a>
+    <a href="/detect">🔍 Mental Health Check</a>
+    <a href="/psychologist">🎥 AI Psychologist</a>
+    <a href="/recommendations" class="active">💡 Recommendations</a>
+    <a href="/mood">😊 Mood Tracker</a>
+    <a href="/stress">😤 Stress Management</a>
+    <a href="/mindfulness">🌿 Mindfulness</a>
+    <a href="/anxiety">💭 Anxiety Help</a>
+    <a href="/about">ℹ️ About</a>
+    <a href="/contact">✉️ Contact</a>
+</div>
+
+<div class="main">
+    <div class="page-header">
+        <h1>Your Personalised Plan</h1>
+        <p>AI-generated recommendations based on your mental health assessment results.</p>
+    </div>
+
+    <!-- No assessment state -->
+    <div id="no-assessment">
+        <div style="font-size:80px">🔍</div>
+        <h2>Take your assessment first</h2>
+        <p>We need your mental health check results to generate personalised recommendations.<br>It only takes 2 minutes!</p>
+        <a href="/detect" class="btn-cta">Start Mental Health Check →</a>
+    </div>
+
+    <!-- Status banner (shown after assessment) -->
+    <div id="status-banner" style="display:none">
+        <div class="banner-emoji" id="b-emoji"></div>
+        <div class="banner-info">
+            <h2 id="b-title">Your current mental state</h2>
+            <p id="b-desc"></p>
+            <div class="banner-scores" id="b-scores"></div>
+        </div>
+        <div class="banner-badge" id="b-badge"></div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading-state" style="display:none">
+        <div class="spinner"></div>
+        <h3>Crafting your personalised plan…</h3>
+        <p>Our AI is analysing your results and building recommendations just for you.</p>
+    </div>
+
+    <!-- Recommendations -->
+    <div id="recs-grid">
+        <div class="section-title">🌟 Top Recommendations for You</div>
+        <div class="cards-grid" id="recs-cards"></div>
+
+        <div class="daily-plan">
+            <div class="section-title">📅 Your Daily Wellness Plan</div>
+            <p style="color:var(--muted);font-size:15px;">A gentle structure for the day, personalised to your needs.</p>
+            <div class="plan-timeline" id="plan-timeline"></div>
+        </div>
+
+        <div class="cta-strip">
+            <div>
+                <h3>Want to talk it through?</h3>
+                <p>Your AI psychologist is ready for a live session based on these results.</p>
+            </div>
+            <a href="/psychologist" class="cta-btn">Start AI Therapy Session →</a>
+        </div>
+    </div>
+</div>
+
+<script>
+const savedResult = JSON.parse(sessionStorage.getItem('calmmind_result') || 'null');
+
+async function init() {
+    if (!savedResult) {
+        document.getElementById('no-assessment').style.display = 'block';
+        return;
+    }
+
+    // Show banner
+    const banner = document.getElementById('status-banner');
+    banner.style.display = 'flex';
+    document.getElementById('b-emoji').textContent = savedResult.emoji || '😐';
+    document.getElementById('b-title').textContent = savedResult.overall + ' Distress Level Detected';
+    document.getElementById('b-desc').textContent = savedResult.summary || '';
+    const badge = document.getElementById('b-badge');
+    badge.textContent = savedResult.overall;
+    badge.style.background = (savedResult.color || '#6c63ff') + '22';
+    badge.style.color = savedResult.color || '#6c63ff';
+
+    document.getElementById('b-scores').innerHTML = `
+        <div class="score-chip"><div class="dot" style="background:#6c63ff"></div>Mood: ${savedResult.mood_pct}%</div>
+        <div class="score-chip"><div class="dot" style="background:#f59e0b"></div>Anxiety: ${savedResult.anxiety_pct}%</div>
+        <div class="score-chip"><div class="dot" style="background:#ef4444"></div>Stress: ${savedResult.stress_pct}%</div>`;
+
+    // Show loading
+    document.getElementById('loading-state').style.display = 'block';
+
+    // Generate recommendations
+    const prompt = `You are a mental health advisor. Generate personalised wellness recommendations for someone with:
+- Overall distress: ${savedResult.overall}
+- Mood impact: ${savedResult.mood_pct}%
+- Anxiety level: ${savedResult.anxiety_pct}%  
+- Stress load: ${savedResult.stress_pct}%
+
+Return ONLY valid JSON (no markdown):
+{
+  "recommendations": [
+    {
+      "icon": "emoji",
+      "tag": "short category (e.g. Breathing, Exercise, Sleep)",
+      "title": "recommendation title",
+      "desc": "2-sentence explanation",
+      "link": "/mindfulness or /stress or /anxiety or /mood or /selfcare",
+      "color": "#hex",
+      "tag_color": "#hex"
+    }
+  ],
+  "daily_plan": [
+    {
+      "time": "e.g. 7:00 AM",
+      "title": "activity name",
+      "desc": "brief description",
+      "duration": "e.g. 10 min"
+    }
+  ]
+}
+
+Provide exactly 6 recommendations and 6 daily plan items. Make them highly specific to the distress levels above.`;
+
+    try {
+        const resp = await fetch("/api/recommendations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ assessment: savedResult })
+        });
+        const parsed = await resp.json();
+        renderRecs(parsed);
+    } catch(e) {
+        renderFallback();
+    }
+}
+
+function renderRecs(data) {
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('recs-grid').style.display = 'block';
+
+    const grid = document.getElementById('recs-cards');
+    grid.innerHTML = data.recommendations.map(r => `
+        <div class="rec-card" style="border-left-color:${r.color || '#6c63ff'}">
+            <div class="card-icon">${r.icon}</div>
+            <div class="card-tag" style="background:${(r.tag_color||r.color||'#6c63ff')}22;color:${r.tag_color||r.color||'#6c63ff'}">${r.tag}</div>
+            <div class="card-title">${r.title}</div>
+            <div class="card-desc">${r.desc}</div>
+            <a href="${r.link}" class="card-action">Explore →</a>
+        </div>`).join('');
+
+    const timeline = document.getElementById('plan-timeline');
+    timeline.innerHTML = data.daily_plan.map(p => `
+        <div class="plan-item">
+            <div class="plan-time">${p.time}</div>
+            <div class="plan-dot"></div>
+            <div class="plan-text">
+                <strong>${p.title}</strong>
+                <span>${p.desc}</span>
+            </div>
+            <div class="plan-duration">${p.duration}</div>
+        </div>`).join('');
+}
+
+function renderFallback() {
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('recs-grid').style.display = 'block';
+
+    const recs = [
+        { icon: '🧘', tag: 'Mindfulness', title: 'Daily Meditation Practice', desc: 'Start with just 5 minutes of guided breathing each morning. Consistency matters more than duration.', link: '/mindfulness', color: '#6c63ff', tag_color: '#6c63ff' },
+        { icon: '🌬️', tag: 'Breathing', title: 'Box Breathing for Anxiety', desc: 'Inhale for 4, hold for 4, exhale for 4. This technique directly calms your nervous system in minutes.', link: '/anxiety', color: '#00c9a7', tag_color: '#00c9a7' },
+        { icon: '📓', tag: 'Journaling', title: 'Gratitude Journaling', desc: 'Write 3 things you\'re grateful for each night. Research shows this rewires your brain towards positivity.', link: '/mood', color: '#f59e0b', tag_color: '#f59e0b' },
+        { icon: '🚶', tag: 'Movement', title: '20-Minute Daily Walk', desc: 'Walking in nature for 20 minutes reduces cortisol and boosts serotonin. No gym needed.', link: '/selfcare', color: '#10b981', tag_color: '#10b981' },
+        { icon: '😴', tag: 'Sleep', title: 'Sleep Hygiene Protocol', desc: 'Consistent sleep and wake times regulate your circadian rhythm and dramatically improve mood.', link: '/selfcare', color: '#8b83ff', tag_color: '#8b83ff' },
+        { icon: '💬', tag: 'Therapy', title: 'AI Therapy Session', desc: 'Talk through your feelings with your AI psychologist. Regular sessions improve emotional processing.', link: '/psychologist', color: '#ef4444', tag_color: '#ef4444' },
+    ];
+    const plan = [
+        { time: '7:00 AM', title: 'Morning Breathing', desc: 'Start with 5 minutes of box breathing', duration: '5 min' },
+        { time: '8:00 AM', title: 'Healthy Breakfast', desc: 'Nourish your brain with whole foods', duration: '20 min' },
+        { time: '10:00 AM', title: 'Mindfulness Break', desc: 'Brief body scan or grounding exercise', duration: '5 min' },
+        { time: '1:00 PM', title: 'Lunch Walk', desc: 'Short walk outside to reset and recharge', duration: '15 min' },
+        { time: '6:00 PM', title: 'Relaxation Practice', desc: 'Progressive muscle relaxation or yoga', duration: '20 min' },
+        { time: '9:30 PM', title: 'Gratitude Journal', desc: 'Write 3 things you appreciated today', duration: '10 min' },
+    ];
+    renderRecs({ recommendations: recs, daily_plan: plan });
+}
+
+init();
+</script>
+</body>
+</html>

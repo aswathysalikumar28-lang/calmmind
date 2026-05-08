@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Self-Care Tips - CalmMind</title>
+    <style>
+        body {
+            margin:0;
+            font-family:'Segoe UI', sans-serif;
+            display:flex;
+            background: linear-gradient(135deg, #c3f0ca, #f9d5ec);
+            min-height:100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            height:100vh;
+            width:220px;
+            background-color:#6c63ff;
+            display:flex;
+            flex-direction:column;
+            padding-top:30px;
+            position:fixed;
+            left:0;
+            top:0;
+            box-shadow: 3px 0 15px rgba(0,0,0,0.1);
+        }
+        .sidebar a {
+            color:white;
+            padding:15px 25px;
+            text-decoration:none;
+            font-size:18px;
+            margin:5px 0;
+            border-radius:0 25px 25px 0;
+            transition:0.3s;
+        }
+        .sidebar a:hover {
+            background-color:#574fd6;
+            transform: scale(1.05);
+        }
+
+        /* Main */
+        .main {
+            margin-left:220px;
+            padding:50px;
+            display:flex;
+            flex-direction:column;
+            gap:20px;
+            animation: fadeIn 1.2s ease-in-out;
+        }
+
+        h1 {
+            color:#2c3e50;
+            font-size:42px;
+            text-align:center;
+        }
+
+        p {
+            font-size:20px;
+            color:#555;
+            text-align:center;
+            margin-bottom:30px;
+        }
+
+        /* Cards */
+        .card {
+            background:white;
+            padding:20px 25px;
+            border-radius:20px;
+            box-shadow:0 8px 25px rgba(0,0,0,0.15);
+            display:flex;
+            align-items:center;
+            gap:15px;
+            font-size:18px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow:0 12px 30px rgba(0,0,0,0.2);
+        }
+
+        .icon {
+            font-size:30px;
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from {opacity:0; transform:translateY(20px);}
+            to {opacity:1; transform:translateY(0);}
+        }
+    </style>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body>
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+
+<div class="sidebar" style="">
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/test">Start Assessment</a>
+    <a href="/mindfulness">Mindfulness</a>
+    <a href="/stress">Stress Management</a>
+    <a href="/anxiety">Anxiety Resources</a>
+    <a href="/mood">Mood Tracker</a>
+    <a href="/selfcare">Self-Care Tips</a>
+    <a href="/analyze">Mind Analysis</a>
+    <a href="/about">About</a>
+    <a href="/resources">Resources</a>
+    <a href="/contact">Contact</a>
+    
+</div>
+
+<div class="main">
+    <h1>Self-Care Tips</h1>
+    <p>Build small daily habits that improve your mental and emotional well-being.</p>
+
+    <div class="card"><span class="icon">💧</span> Drink water and eat nutritious meals.</div>
+    <div class="card"><span class="icon">🌿</span> Take breaks and spend time outdoors.</div>
+    <div class="card"><span class="icon">🧘</span> Practice mindfulness or meditation.</div>
+    <div class="card"><span class="icon">🎨</span> Engage in hobbies you enjoy.</div>
+    <div class="card"><span class="icon">😴</span> Ensure sufficient sleep and rest.</div>
+
+</div>
+
+</body>
+</html>

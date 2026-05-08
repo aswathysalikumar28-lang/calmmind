@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard - CalmMind</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            background: #f5f7fb;
+            overflow: hidden; /* ✅ needed for animation */
+        }
+
+        /* ✅ PEACEFUL MOVING WAVES */
+        .bg-wave {
+            position: fixed;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background: radial-gradient(circle at 30% 30%, rgba(108,99,255,0.15), transparent 40%),
+                        radial-gradient(circle at 70% 70%, rgba(0,201,167,0.15), transparent 40%);
+            animation: waveMove 18s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes waveMove {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(50px, 30px) rotate(180deg); }
+            100% { transform: translate(0, 0) rotate(360deg); }
+        }
+
+        /* Sidebar */
+        .sidebar {
+            height: 100vh;
+            width: 200px;
+            background-color: #6c63ff;
+            display: flex;
+            flex-direction: column;
+            padding-top: 30px;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+
+        .sidebar a {
+            color: white;
+            padding: 15px 20px;
+            text-decoration: none;
+            font-size: 18px;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            background-color: #574fd6;
+        }
+
+        /* Main content */
+        .main {
+            margin-left: 200px;
+            flex: 1;
+            padding: 50px;
+            color: #2c3e50;
+        }
+
+        h1 {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .highlight {
+            color: #6c63ff;
+            font-weight: bold;
+        }
+
+        .hero-box {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            color: black;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        #chat-btn {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: #6c63ff;
+            color: white;
+            font-size: 22px;
+            padding: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        #chat-popup {
+            position: fixed;
+            bottom: 90px;
+            right: 25px;
+            width: 300px;
+            height: 400px;
+            background: white;
+            border-radius: 15px;
+            display: none;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: #6c63ff;
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #chat-box {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .message {
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 10px;
+            max-width: 70%;
+        }
+
+        .user {
+            background: #6c63ff;
+            color: white;
+            margin-left: auto;
+        }
+
+        .bot {
+            background: #eee;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 5px;
+        }
+
+        .chat-input button {
+            background: #6c63ff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+        }
+
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body>
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+
+<!-- ✅ ADD THIS LINE ONLY -->
+<div class="bg-wave"></div>
+
+<div class="sidebar">
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/test">Check Anxiety Level</a>
+    <a href="/mindfulness">Mindfulness</a>
+    <a href="/stress">Stress Management</a>
+    <a href="/detect" class="active">Mental Health Check</a>
+    <a href="/psychologist"> AI Psychologist</a>
+    <a href="/anxiety">Anxiety Resources</a>
+    <a href="/mood">Mood Tracker</a>
+    <a href="/selfcare">Self-Care Tips</a>
+    <a href="/analyze">Mind Analysis</a>
+    <a href="/about">About</a>
+    <a href="/resources">Resources</a>
+    <a href="/contact">Contact</a>
+    
+</div>
+
+<div class="main">
+
+    <div class="hero-box">
+        <h1>Welcome to CalmMind Dashboard</h1>
+        <p>Here you can track your mental health progress and manage your assessments. 
+           <span class="highlight">Stay mindful, stay calm.</span></p>
+        <p>Use the sidebar to navigate through your assessments, resources, and support pages.</p>
+    </div>
+
+    <div class="cards">
+        <div class="card">
+            <h3>🧠 Mood Tracker</h3>
+            <p>Track your daily emotions and patterns.</p>
+        </div>
+
+        <div class="card">
+            <h3>😌 Stress Management</h3>
+            <p>Learn techniques to reduce stress.</p>
+        </div>
+
+        <div class="card">
+            <h3>🌿 Mindfulness</h3>
+            <p>Practice breathing and meditation.</p>
+        </div>
+
+        <div class="card">
+            <h3>💬 AI Assistant</h3>
+            <p>Chat for guidance and support.</p>
+        </div>
+    </div>
+
+</div>
+
+<div id="chat-btn" onclick="toggleChat()">💬</div>
+
+<div id="chat-popup">
+    <div class="chat-header">
+        CalmMind Assistant
+        <span onclick="toggleChat()" style="cursor:pointer;">✖</span>
+    </div>
+
+    <div id="chat-box"></div>
+
+    <div class="chat-input">
+        <input type="text" id="userInput" placeholder="Type a message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+function toggleChat() {
+    let chat = document.getElementById("chat-popup");
+    chat.style.display = chat.style.display === "flex" ? "none" : "flex";
+}
+
+function sendMessage() {
+    let input = document.getElementById("userInput");
+    let message = input.value;
+
+    if(message.trim() === "") return;
+
+    let chatBox = document.getElementById("chat-box");
+
+    let userDiv = document.createElement("div");
+    userDiv.className = "message user";
+    userDiv.innerText = message;
+    chatBox.appendChild(userDiv);
+
+    fetch("/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({message: message})
+    })
+    .then(res => res.json())
+    .then(data => {
+        let botDiv = document.createElement("div");
+        botDiv.className = "message bot";
+        botDiv.innerText = data.reply;
+        chatBox.appendChild(botDiv);
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    input.value = "";
+}
+</script>
+
+</body>
+</html>

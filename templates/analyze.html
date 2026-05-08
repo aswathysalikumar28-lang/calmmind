@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mind Analysis - CalmMind</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f172a;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: rgba(255,255,255,0.08);
+            padding: 40px;
+            border-radius: 20px;
+            width: 400px;
+            backdrop-filter: blur(15px);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-top: 20px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        .btn {
+            margin-top: 25px;
+            padding: 10px 25px;
+            background: #6c63ff;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .result {
+            margin-top: 25px;
+            font-size: 16px;
+            color: #e2e8f0;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Mind Analysis</h1>
+
+    <label>Mood Level 😔 → 😊</label>
+    <input type="range" id="mood" min="1" max="10">
+
+    <label>Stress Level 😌 → 😵</label>
+    <input type="range" id="stress" min="1" max="10">
+
+    <label>Energy Level 😴 → ⚡</label>
+    <input type="range" id="energy" min="1" max="10">
+
+    <button class="btn" onclick="analyze()">Analyse</button>
+
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+function analyze() {
+    let mood = document.getElementById("mood").value;
+    let stress = document.getElementById("stress").value;
+    let energy = document.getElementById("energy").value;
+
+    let result = "";
+
+    if (stress > 7) {
+        result = "You seem stressed. Try a 2-minute breathing exercise.";
+    } else if (mood < 4) {
+        result = "Your mood is low. Take a short walk or listen to calm music.";
+    } else if (energy < 4) {
+        result = "Low energy detected. Rest or hydrate yourself.";
+    } else {
+        result = "You're doing well. Keep maintaining your balance.";
+    }
+
+    document.getElementById("result").innerText = result;
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mental Health Detection - CalmMind</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --purple: #6c63ff;
+            --purple-dark: #574fd6;
+            --teal: #00c9a7;
+            --bg: #f0f2ff;
+            --card: #ffffff;
+            --text: #1a1a2e;
+            --muted: #6b7280;
+            --sidebar-w: 220px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--purple);
+            min-height: 100vh;
+            position: fixed;
+            top: 0; left: 0;
+            display: flex;
+            flex-direction: column;
+            padding-top: 28px;
+            z-index: 100;
+        }
+        .sidebar .logo {
+            color: white;
+            font-family: 'DM Serif Display', serif;
+            font-size: 22px;
+            padding: 0 22px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 10px;
+        }
+        .sidebar a {
+            color: rgba(255,255,255,0.85);
+            padding: 13px 22px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sidebar a:hover, .sidebar a.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        /* ── MAIN ── */
+        .main {
+            margin-left: var(--sidebar-w);
+            flex: 1;
+            padding: 48px 56px;
+            max-width: 900px;
+        }
+
+        .page-header {
+            margin-bottom: 36px;
+        }
+        .page-header h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 42px;
+            color: var(--text);
+            line-height: 1.2;
+        }
+        .page-header p {
+            color: var(--muted);
+            font-size: 17px;
+            margin-top: 10px;
+        }
+
+        /* Progress Bar */
+        .progress-track {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 40px;
+        }
+        .progress-step {
+            flex: 1;
+            height: 6px;
+            background: #dde0f7;
+            border-radius: 99px;
+            transition: background 0.4s;
+        }
+        .progress-step.done { background: var(--teal); }
+        .progress-step.active { background: var(--purple); }
+
+        /* Question Card */
+        .question-card {
+            background: white;
+            border-radius: 20px;
+            padding: 36px;
+            box-shadow: 0 4px 30px rgba(108,99,255,0.1);
+            display: none;
+            animation: slideIn 0.35s ease;
+        }
+        .question-card.active { display: block; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .q-category {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--purple);
+            margin-bottom: 10px;
+        }
+        .q-text {
+            font-family: 'DM Serif Display', serif;
+            font-size: 24px;
+            color: var(--text);
+            margin-bottom: 28px;
+            line-height: 1.4;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+        .option-btn {
+            border: 2px solid #e5e7ff;
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 15px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .option-btn:hover { border-color: var(--purple); background: #f5f4ff; }
+        .option-btn.selected { border-color: var(--purple); background: #f0eeff; color: var(--purple); font-weight: 600; }
+
+        .option-value {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: #e5e7ff;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--purple);
+            flex-shrink: 0;
+        }
+        .option-btn.selected .option-value { background: var(--purple); color: white; }
+
+        .nav-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 28px;
+        }
+        .btn-back {
+            border: 2px solid #e5e7ff;
+            background: white;
+            color: var(--muted);
+            border-radius: 10px;
+            padding: 11px 24px;
+            cursor: pointer;
+            font-size: 15px;
+            font-family: 'DM Sans', sans-serif;
+            transition: 0.2s;
+        }
+        .btn-back:hover { border-color: var(--purple); color: var(--purple); }
+        .btn-next {
+            background: var(--purple);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 13px 32px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s;
+        }
+        .btn-next:hover { background: var(--purple-dark); transform: translateY(-2px); }
+        .btn-next:disabled { background: #c9c7f5; cursor: not-allowed; transform: none; }
+
+        /* RESULT */
+        #result-panel {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 48px;
+            box-shadow: 0 4px 30px rgba(108,99,255,0.1);
+            text-align: center;
+            animation: slideIn 0.35s ease;
+        }
+        #result-panel h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        #result-emoji { font-size: 72px; margin-bottom: 16px; }
+        #result-label {
+            display: inline-block;
+            padding: 8px 24px;
+            border-radius: 99px;
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        #result-desc {
+            color: var(--muted);
+            font-size: 16px;
+            line-height: 1.7;
+            max-width: 580px;
+            margin: 0 auto 32px;
+        }
+
+        .score-bars {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+        .score-bar-item label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .bar-track {
+            margin-top: 8px;
+            height: 10px;
+            background: #e5e7ff;
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 1s ease;
+        }
+        .bar-pct { font-size: 14px; font-weight: 700; margin-top: 4px; }
+
+        .result-actions {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-action {
+            padding: 13px 28px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: var(--purple); color: white; border: none; }
+        .btn-primary:hover { background: var(--purple-dark); transform: translateY(-2px); }
+        .btn-outline { background: white; color: var(--purple); border: 2px solid var(--purple); }
+        .btn-outline:hover { background: #f0eeff; }
+
+        /* Loading */
+        #loading-panel {
+            display: none;
+            text-align: center;
+            padding: 60px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 30px rgba(108,99,255,0.1);
+        }
+        .spinner {
+            width: 54px; height: 54px;
+            border: 5px solid #e5e7ff;
+            border-top-color: var(--purple);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #loading-panel p { color: var(--muted); font-size: 16px; }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body>
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+
+<div class="sidebar" style="">
+    <div class="logo">🧠 CalmMind</div>
+    <a href="/">🏠 Home</a>
+    <a href="/dashboard">📊 Dashboard</a>
+    <a href="/detect" class="active">🔍 Mental Health Check</a>
+    <a href="/psychologist">🎥 AI Psychologist</a>
+    <a href="/recommendations">💡 Recommendations</a>
+    <a href="/mood">😊 Mood Tracker</a>
+    <a href="/stress">😤 Stress Management</a>
+    <a href="/mindfulness">🌿 Mindfulness</a>
+    <a href="/anxiety">💭 Anxiety Help</a>
+    <a href="/about">ℹ️ About</a>
+    <a href="/contact">✉️ Contact</a>
+</div>
+
+<div class="main">
+    <div class="page-header">
+        <h1>Mental Health Detection</h1>
+        <p>Answer a few honest questions — our AI will assess your current mental state and guide you.</p>
+    </div>
+
+    <div class="progress-track" id="progress-track"></div>
+
+    <!-- QUESTIONS -->
+    <div id="questions-area"></div>
+
+    <!-- LOADING -->
+    <div id="loading-panel">
+        <div class="spinner"></div>
+        <p>Analysing your responses with AI…</p>
+    </div>
+
+    <!-- RESULT -->
+    <div id="result-panel">
+        <div id="result-emoji"></div>
+        <h2>Your Mental Health Summary</h2>
+        <div id="result-label"></div>
+        <p id="result-desc"></p>
+
+        <div class="score-bars" id="score-bars"></div>
+
+        <div class="result-actions">
+            <a href="/psychologist" class="btn-action btn-primary">🎥 Talk to AI Psychologist</a>
+            <a href="/recommendations" class="btn-action btn-outline">💡 Get Recommendations</a>
+        </div>
+    </div>
+</div>
+
+<script>
+const questions = [
+    { cat: "Mood", text: "Over the last 2 weeks, how often have you felt down, depressed, or hopeless?", opts: ["Not at all", "Several days", "More than half the days", "Nearly every day"] },
+    { cat: "Anxiety", text: "How often have you felt nervous, anxious, or on edge recently?", opts: ["Not at all", "Several days", "More than half the days", "Nearly every day"] },
+    { cat: "Sleep", text: "How has your sleep been lately?", opts: ["Very good — no problems", "Slightly disrupted", "Often poor, trouble falling asleep", "Very poor — exhausted most days"] },
+    { cat: "Energy", text: "How would you describe your energy levels day-to-day?", opts: ["High — I feel motivated", "Moderate — some fatigue", "Low — often tired", "Very low — no energy at all"] },
+    { cat: "Stress", text: "How stressed do you feel from work, relationships, or daily life?", opts: ["Barely stressed", "Mildly stressed", "Moderately stressed", "Severely stressed"] },
+    { cat: "Concentration", text: "How well can you focus on tasks or conversations?", opts: ["Very easily", "Mostly fine, occasional dips", "Often struggle to focus", "Cannot concentrate at all"] },
+    { cat: "Social", text: "Have you withdrawn from friends, family, or activities you used to enjoy?", opts: ["Not at all", "A little", "Quite a bit", "Almost completely"] },
+    { cat: "Self-worth", text: "How do you feel about yourself — your self-esteem and confidence?", opts: ["Very positive", "Generally okay", "Often negative thoughts", "Very low, constant self-doubt"] },
+];
+
+let answers = new Array(questions.length).fill(null);
+let current = 0;
+
+function buildUI() {
+    const track = document.getElementById('progress-track');
+    const area = document.getElementById('questions-area');
+    track.innerHTML = '';
+    area.innerHTML = '';
+
+    questions.forEach((q, i) => {
+        // Progress
+        const step = document.createElement('div');
+        step.className = 'progress-step';
+        step.id = `step-${i}`;
+        track.appendChild(step);
+
+        // Card
+        const card = document.createElement('div');
+        card.className = 'question-card' + (i === 0 ? ' active' : '');
+        card.id = `card-${i}`;
+        card.innerHTML = `
+            <div class="q-category">${q.cat} • Question ${i+1} of ${questions.length}</div>
+            <div class="q-text">${q.text}</div>
+            <div class="options" id="opts-${i}">
+                ${q.opts.map((o, j) => `
+                <button class="option-btn" onclick="select(${i},${j})" id="opt-${i}-${j}">
+                    <div class="option-value">${j}</div>
+                    <span>${o}</span>
+                </button>`).join('')}
+            </div>
+            <div class="nav-row">
+                <button class="btn-back" onclick="goBack(${i})" ${i===0?'style="visibility:hidden"':''}>← Back</button>
+                <button class="btn-next" id="next-${i}" onclick="goNext(${i})" disabled>
+                    ${i === questions.length-1 ? 'Analyse My Results 🔍' : 'Next →'}
+                </button>
+            </div>`;
+        area.appendChild(card);
+    });
+
+    updateProgress();
+}
+
+function select(qi, vi) {
+    answers[qi] = vi;
+    document.querySelectorAll(`#opts-${qi} .option-btn`).forEach(b => b.classList.remove('selected'));
+    document.getElementById(`opt-${qi}-${vi}`).classList.add('selected');
+    document.getElementById(`next-${qi}`).disabled = false;
+}
+
+function goNext(i) {
+    if (i === questions.length - 1) { submitAnswers(); return; }
+    document.getElementById(`card-${i}`).classList.remove('active');
+    document.getElementById(`card-${i+1}`).classList.add('active');
+    current = i + 1;
+    updateProgress();
+}
+
+function goBack(i) {
+    document.getElementById(`card-${i}`).classList.remove('active');
+    document.getElementById(`card-${i-1}`).classList.add('active');
+    current = i - 1;
+    updateProgress();
+}
+
+function updateProgress() {
+    questions.forEach((_, i) => {
+        const s = document.getElementById(`step-${i}`);
+        if (i < current) s.className = 'progress-step done';
+        else if (i === current) s.className = 'progress-step active';
+        else s.className = 'progress-step';
+    });
+}
+
+async function submitAnswers() {
+    document.getElementById('questions-area').style.display = 'none';
+    document.getElementById('progress-track').style.display = 'none';
+    document.getElementById('loading-panel').style.display = 'block';
+
+    // Build score per domain
+    const domains = questions.map((q, i) => ({ cat: q.cat, score: answers[i] || 0 }));
+    const totalScore = domains.reduce((s, d) => s + d.score, 0);
+    const maxScore = questions.length * 3;
+    const pct = Math.round((totalScore / maxScore) * 100);
+
+    // AI analysis — calls Flask backend which calls Claude (fixes browser CORS block)
+    let result;
+    try {
+        const resp = await fetch("/api/detect", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ domains, pct })
+        });
+        result = await resp.json();
+    } catch (e) {
+        // Fallback
+        result = {
+            overall: pct < 30 ? "Low" : pct < 55 ? "Moderate" : pct < 75 ? "Elevated" : "High",
+            emoji: pct < 30 ? "😊" : pct < 55 ? "😐" : pct < 75 ? "😟" : "😰",
+            summary: "Based on your responses, we've assessed your current mental state. Remember, seeking support is always a sign of strength.",
+            mood_pct: Math.round(answers[0]/3*100),
+            anxiety_pct: Math.round(answers[1]/3*100),
+            stress_pct: Math.round(answers[4]/3*100),
+            color: pct < 30 ? "#10b981" : pct < 55 ? "#f59e0b" : pct < 75 ? "#f97316" : "#ef4444"
+        };
+    }
+
+    // Store in sessionStorage for recommendations page
+    sessionStorage.setItem('calmmind_result', JSON.stringify({ ...result, domains, totalScore, maxScore }));
+
+    showResult(result);
+}
+
+function showResult(r) {
+    document.getElementById('loading-panel').style.display = 'none';
+    const panel = document.getElementById('result-panel');
+    panel.style.display = 'block';
+
+    document.getElementById('result-emoji').textContent = r.emoji;
+    document.getElementById('result-desc').textContent = r.summary;
+
+    const label = document.getElementById('result-label');
+    label.textContent = r.overall + ' Distress Level';
+    label.style.background = r.color + '22';
+    label.style.color = r.color;
+
+    const bars = document.getElementById('score-bars');
+    const metrics = [
+        { label: 'Mood Impact', pct: r.mood_pct, color: '#6c63ff' },
+        { label: 'Anxiety Level', pct: r.anxiety_pct, color: '#f59e0b' },
+        { label: 'Stress Load', pct: r.stress_pct, color: '#ef4444' },
+    ];
+    bars.innerHTML = metrics.map(m => `
+        <div class="score-bar-item">
+            <label>${m.label}</label>
+            <div class="bar-track"><div class="bar-fill" style="width:0%;background:${m.color}" data-pct="${m.pct}"></div></div>
+            <div class="bar-pct" style="color:${m.color}">${m.pct}%</div>
+        </div>`).join('');
+
+    setTimeout(() => {
+        document.querySelectorAll('.bar-fill').forEach(b => {
+            b.style.width = b.dataset.pct + '%';
+        });
+    }, 100);
+}
+
+buildUI();
+</script>
+</body>
+</html>

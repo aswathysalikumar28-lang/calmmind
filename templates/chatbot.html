@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Chatbot - CalmMind</title>
+    <style>
+        body {
+            margin:0;
+            font-family:'Segoe UI', sans-serif;
+            display:flex;
+            background: linear-gradient(135deg, #c3cfe2, #c3f0ca);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            height:100vh;
+            width:220px;
+            background-color:#6c63ff;
+            display:flex;
+            flex-direction:column;
+            padding-top:30px;
+            position:fixed;
+            left:0;
+            top:0;
+        }
+        .sidebar a {
+            color:white;
+            padding:15px 25px;
+            text-decoration:none;
+            font-size:18px;
+        }
+        .sidebar a:hover {
+            background:#574fd6;
+        }
+
+        /* Chat area */
+        .main {
+            margin-left:220px;
+            flex:1;
+            display:flex;
+            flex-direction:column;
+            height:100vh;
+        }
+        @media(max-width:768px){
+            .main{margin-left:0!important;height:100svh;padding-top:60px!important;}
+        }
+
+        .chat-box {
+            flex:1;
+            padding:20px;
+            overflow-y:auto;
+        }
+
+        .message {
+            max-width:60%;
+            padding:12px;
+            margin:10px 0;
+            border-radius:15px;
+            font-size:16px;
+        }
+
+        .user {
+            background:#6c63ff;
+            color:white;
+            align-self:flex-end;
+        }
+
+        .bot {
+            background:white;
+            box-shadow:0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .input-area {
+            display:flex;
+            padding:15px;
+            background:white;
+        }
+
+        input {
+            flex:1;
+            padding:10px;
+            border-radius:10px;
+            border:1px solid #ccc;
+        }
+
+        button {
+            margin-left:10px;
+            padding:10px 20px;
+            border:none;
+            border-radius:10px;
+            background:#6c63ff;
+            color:white;
+            cursor:pointer;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body>
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+
+<div class="sidebar">
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/chatbot">Chatbot</a>
+</div>
+
+<div class="main">
+    <div class="chat-box" id="chatBox"></div>
+
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Talk to CalmMind...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+function sendMessage() {
+    let input = document.getElementById("userInput");
+    let message = input.value;
+
+    if(message.trim() === "") return;
+
+    let chatBox = document.getElementById("chatBox");
+
+    // User message
+    let userDiv = document.createElement("div");
+    userDiv.className = "message user";
+    userDiv.innerText = message;
+    chatBox.appendChild(userDiv);
+
+    // Send to backend
+    fetch("/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({message: message})
+    })
+    .then(res => res.json())
+    .then(data => {
+        let botDiv = document.createElement("div");
+        botDiv.className = "message bot";
+        botDiv.innerText = data.reply;
+        chatBox.appendChild(botDiv);
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    input.value = "";
+}
+</script>
+
+</body>
+</html>

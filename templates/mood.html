@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mood Tracker - CalmMind</title>
+    <style>
+        body {
+            margin:0;
+            font-family:'Segoe UI', sans-serif;
+            display:flex;
+            background: linear-gradient(135deg, #89f7fe, #66a6ff);
+            min-height:100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            height:100vh;
+            width:220px;
+            background-color:#6c63ff;
+            display:flex;
+            flex-direction:column;
+            padding-top:30px;
+            position:fixed;
+            left:0;
+            top:0;
+            box-shadow: 3px 0 15px rgba(0,0,0,0.1);
+        }
+        .sidebar a {
+            color:white;
+            padding:15px 25px;
+            text-decoration:none;
+            font-size:18px;
+            margin:5px 0;
+            border-radius:0 25px 25px 0;
+            transition:0.3s;
+        }
+        .sidebar a:hover {
+            background-color:#574fd6;
+            transform: scale(1.05);
+        }
+
+        /* Main */
+        .main {
+            margin-left:220px;
+            padding:50px;
+            display:flex;
+            flex-direction:column;
+            gap:30px;
+            animation: fadeIn 1.2s ease-in-out;
+        }
+
+        h1 {
+            text-align:center;
+            font-size:42px;
+            color:#2c3e50;
+        }
+
+        /* Mood Selection */
+        .mood-container {
+            display:grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap:20px;
+        }
+
+        .mood-card {
+            background:white;
+            padding:25px;
+            border-radius:20px;
+            text-align:center;
+            font-size:18px;
+            box-shadow:0 8px 25px rgba(0,0,0,0.15);
+            cursor:pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mood-card:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow:0 12px 30px rgba(0,0,0,0.2);
+        }
+
+        .mood-icon {
+            font-size:40px;
+            display:block;
+            margin-bottom:10px;
+        }
+
+        /* Log Section */
+        .log-box {
+            background: rgba(255,255,255,0.9);
+            padding:25px;
+            border-radius:20px;
+            box-shadow:0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        textarea {
+            width:100%;
+            padding:12px;
+            border-radius:10px;
+            border:1px solid #ccc;
+            font-size:16px;
+            margin-top:10px;
+        }
+
+        button {
+            margin-top:15px;
+            padding:12px 25px;
+            border:none;
+            border-radius:30px;
+            background:#6c63ff;
+            color:white;
+            font-size:16px;
+            cursor:pointer;
+            transition:0.3s;
+        }
+
+        button:hover {
+            background:#574fd6;
+            transform: scale(1.05);
+        }
+
+        /* History */
+        .history {
+            background:white;
+            padding:20px;
+            border-radius:20px;
+            box-shadow:0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        @keyframes fadeIn {
+            from {opacity:0; transform:translateY(20px);}
+            to {opacity:1; transform:translateY(0);}
+        }
+    </style>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body>
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+
+<div class="sidebar" style="">
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/test">Start Assessment</a>
+    <a href="/mindfulness">Mindfulness</a>
+    <a href="/stress">Stress Management</a>
+    <a href="/anxiety">Anxiety Resources</a>
+    <a href="/mood">Mood Tracker</a>
+    <a href="/selfcare">Self-Care Tips</a>
+    <a href="/analyze">Mind Analysis</a>
+    <a href="/about">About</a>
+    <a href="/resources">Resources</a>
+    <a href="/contact">Contact</a>
+    
+</div>
+
+<div class="main">
+    <h1>Mood Tracker</h1>
+
+    <!-- Mood Selection -->
+    <div class="mood-container">
+        <div class="mood-card"><span class="mood-icon">😊</span>Happy</div>
+        <div class="mood-card"><span class="mood-icon">😐</span>Neutral</div>
+        <div class="mood-card"><span class="mood-icon">😟</span>Anxious</div>
+        <div class="mood-card"><span class="mood-icon">😢</span>Sad</div>
+        <div class="mood-card"><span class="mood-icon">😡</span>Angry</div>
+    </div>
+
+    <!-- Log Section -->
+    <div class="log-box">
+        <h2>Write about your day</h2>
+        <textarea placeholder="How are you feeling today?"></textarea>
+        <button>Save Entry</button>
+    </div>
+
+    <!-- History -->
+    <div class="history">
+        <h2>Your Mood History</h2>
+        <p>(Future feature: Mood trends and charts will appear here.)</p>
+    </div>
+
+</div>
+
+</body>
+</html>

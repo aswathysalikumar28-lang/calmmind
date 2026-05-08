@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Psychologist - CalmMind</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --purple: #6c63ff;
+            --purple-dark: #574fd6;
+            --teal: #00c9a7;
+            --bg: #f0f2ff;
+            --text: #1a1a2e;
+            --muted: #6b7280;
+            --sidebar-w: 220px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); display: flex; min-height: 100vh; }
+
+        .sidebar { width: var(--sidebar-w); background: var(--purple); min-height: 100vh; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; padding-top: 28px; z-index: 100; }
+        .sidebar .logo { color: white; font-family: 'DM Serif Display', serif; font-size: 22px; padding: 0 22px 24px; border-bottom: 1px solid rgba(255,255,255,0.2); margin-bottom: 10px; }
+        .sidebar a { color: rgba(255,255,255,0.85); padding: 13px 22px; text-decoration: none; font-size: 15px; font-weight: 500; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
+        .sidebar a:hover, .sidebar a.active { background: rgba(255,255,255,0.15); color: white; }
+
+        .main { margin-left: var(--sidebar-w); flex: 1; padding: 48px 56px; }
+        .page-header { margin-bottom: 36px; }
+        .page-header h1 { font-family: 'DM Serif Display', serif; font-size: 42px; color: var(--text); }
+        .page-header p { color: var(--muted); font-size: 17px; margin-top: 10px; }
+
+        .session-layout { display: grid; grid-template-columns: 1fr 400px; gap: 28px; max-width: 1200px; }
+
+        /* ── Video Panel ── */
+        .video-panel { background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 40px rgba(108,99,255,0.15); }
+
+        .video-header { background: linear-gradient(135deg, var(--purple), #8b83ff); padding: 18px 24px; display: flex; align-items: center; gap: 14px; }
+        .psychologist-avatar { width: 48px; height: 48px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,0.8); flex-shrink: 0; }
+        .psychologist-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+        .psychologist-info h3 { color: white; font-size: 17px; font-weight: 600; }
+        .psychologist-info span { color: rgba(255,255,255,0.8); font-size: 13px; }
+        .live-badge { margin-left: auto; background: #ef4444; color: white; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 99px; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .live-dot { width: 8px; height: 8px; border-radius: 50%; background: white; animation: blink 1.2s infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+        /* ── Avatar Stage — full photo, no dark bg ── */
+        .avatar-stage {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/10;
+            overflow: hidden;
+            background: #1a1025;
+        }
+
+        /* Full-screen photo */
+        .avatar-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
+            display: block;
+            transition: filter 0.4s;
+        }
+
+        /* Subtle vignette overlay — keeps UI readable */
+        .vignette {
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 25%, transparent 65%, rgba(0,0,0,0.55) 100%),
+                linear-gradient(to right, rgba(0,0,0,0.15) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.15) 100%);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Speaking glow border */
+        .speak-border {
+            position: absolute;
+            inset: 0;
+            border: 5px solid transparent;
+            border-radius: 0;
+            z-index: 3;
+            pointer-events: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .avatar-stage.speaking .speak-border {
+            border-color: var(--teal);
+            box-shadow: inset 0 0 40px rgba(0,201,167,0.3), 0 0 30px rgba(0,201,167,0.4);
+            animation: borderPulse 0.8s ease-in-out infinite;
+        }
+        @keyframes borderPulse {
+            0%,100% { box-shadow: inset 0 0 40px rgba(0,201,167,0.3), 0 0 30px rgba(0,201,167,0.4); }
+            50%      { box-shadow: inset 0 0 70px rgba(0,201,167,0.5), 0 0 60px rgba(0,201,167,0.6); }
+        }
+
+        /* Name tag bottom-left */
+        .nametag {
+            position: absolute;
+            bottom: 18px;
+            left: 20px;
+            z-index: 10;
+            color: white;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+        }
+        .nametag strong { display: block; font-size: 18px; font-weight: 700; }
+        .nametag span { font-size: 12px; opacity: 0.8; letter-spacing: 0.8px; }
+
+        /* Lip sync bars — bottom centre */
+        .lipsync {
+            position: absolute;
+            bottom: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: flex-end;
+            gap: 5px;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .avatar-stage.speaking .lipsync { opacity: 1; }
+        .lbar {
+            width: 5px;
+            border-radius: 99px;
+            background: white;
+            box-shadow: 0 0 6px rgba(0,201,167,0.8);
+            animation: lwave 0.5s ease-in-out infinite;
+        }
+        .lbar:nth-child(1){ height:8px;  animation-delay:0.00s }
+        .lbar:nth-child(2){ height:16px; animation-delay:0.07s }
+        .lbar:nth-child(3){ height:26px; animation-delay:0.14s }
+        .lbar:nth-child(4){ height:32px; animation-delay:0.21s }
+        .lbar:nth-child(5){ height:26px; animation-delay:0.28s }
+        .lbar:nth-child(6){ height:16px; animation-delay:0.35s }
+        .lbar:nth-child(7){ height:8px;  animation-delay:0.42s }
+        @keyframes lwave {
+            0%,100%{ transform:scaleY(0.25); opacity:0.5 }
+            50%    { transform:scaleY(1);    opacity:1   }
+        }
+
+        /* Speaking badge top-right */
+        #voice-indicator {
+            position: absolute;
+            top: 14px; right: 14px;
+            background: rgba(0,201,167,0.92);
+            backdrop-filter: blur(8px);
+            border-radius: 99px;
+            padding: 7px 16px;
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            z-index: 20;
+        }
+        .vwave { display:flex; gap:3px; align-items:center; }
+        .vbar { width:3px; border-radius:99px; background:white; animation:vw 0.7s ease-in-out infinite; }
+        .vbar:nth-child(1){height:8px;animation-delay:0s}
+        .vbar:nth-child(2){height:14px;animation-delay:0.1s}
+        .vbar:nth-child(3){height:10px;animation-delay:0.2s}
+        .vbar:nth-child(4){height:16px;animation-delay:0.3s}
+        .vbar:nth-child(5){height:8px;animation-delay:0.4s}
+        @keyframes vw { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(0.35)} }
+
+        /* Topic badge top-left */
+        #topic-indicator {
+            position: absolute;
+            top: 14px; left: 14px;
+            background: rgba(108,99,255,0.88);
+            backdrop-filter: blur(8px);
+            border-radius: 99px;
+            padding: 6px 16px;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            z-index: 20;
+            display: none;
+            letter-spacing: 0.4px;
+        }
+
+        /* Subtitles */
+        .subtitles {
+            position: absolute;
+            bottom: 70px;
+            left: 16px; right: 16px;
+            background: rgba(0,0,0,0.72);
+            backdrop-filter: blur(12px);
+            border-radius: 10px;
+            padding: 10px 16px;
+            color: white;
+            font-size: 14px;
+            line-height: 1.6;
+            z-index: 15;
+            display: none;
+            text-align: center;
+        }
+
+        /* Controls */
+        .video-controls { padding: 18px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: white; }
+        .ctrl-btn { border: none; border-radius: 10px; padding: 10px 20px; cursor: pointer; font-size: 14px; font-weight: 600; font-family: 'DM Sans', sans-serif; transition: all 0.2s; display: flex; align-items: center; gap: 7px; }
+        .ctrl-primary { background: var(--purple); color: white; }
+        .ctrl-primary:hover { background: var(--purple-dark); }
+        .ctrl-secondary { background: #f0eeff; color: var(--purple); }
+        .ctrl-secondary:hover { background: #e0dcff; }
+        .ctrl-danger { background: #fef2f2; color: #ef4444; }
+        .ctrl-danger:hover { background: #fee2e2; }
+        .ctrl-mute { background: #fff3e0; color: #f97316; }
+        .ctrl-mute:hover { background: #ffe0b2; }
+        .ctrl-mute.muted { background: #fce8e8; color: #ef4444; }
+
+        /* Topic pills */
+        .topic-pills { padding: 0 24px 20px; display: flex; flex-wrap: wrap; gap: 8px; background: white; }
+        .topic-pill { padding: 7px 16px; border-radius: 99px; background: #f0eeff; color: var(--purple); font-size: 13px; font-weight: 600; cursor: pointer; border: 2px solid transparent; transition: 0.2s; user-select: none; }
+        .topic-pill:hover { border-color: var(--purple); }
+        .topic-pill.selected { background: var(--purple); color: white; border-color: var(--purple); }
+
+        /* Chat panel */
+        .chat-panel { background: white; border-radius: 24px; box-shadow: 0 8px 40px rgba(108,99,255,0.12); display: flex; flex-direction: column; height: 100%; min-height: 580px; }
+        .chat-panel-header { padding: 20px 22px; border-bottom: 1px solid #f0eeff; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+        #chat-messages { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+        #chat-messages::-webkit-scrollbar { width: 4px; }
+        #chat-messages::-webkit-scrollbar-thumb { background: #e0dcff; border-radius: 99px; }
+
+        .msg { max-width: 85%; padding: 12px 16px; border-radius: 16px; font-size: 14px; line-height: 1.6; }
+        .msg-ai { background: #f5f4ff; color: var(--text); border-bottom-left-radius: 4px; align-self: flex-start; }
+        .msg-user { background: var(--purple); color: white; border-bottom-right-radius: 4px; align-self: flex-end; }
+        .msg-name { font-size: 11px; font-weight: 700; margin-bottom: 5px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); }
+
+        .typing-indicator { gap: 5px; align-items: center; padding: 14px 16px; background: #f5f4ff; border-radius: 16px; border-bottom-left-radius: 4px; width: fit-content; display: none; }
+        .typing-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--purple); animation: tdot 1.2s infinite; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes tdot { 0%,80%,100%{transform:scale(1);opacity:0.4} 40%{transform:scale(1.3);opacity:1} }
+
+        .chat-input-area { padding: 16px; border-top: 1px solid #f0eeff; display: flex; gap: 10px; }
+        .chat-input-area input { flex: 1; border: 2px solid #e5e7ff; border-radius: 12px; padding: 11px 16px; font-size: 14px; font-family: 'DM Sans', sans-serif; outline: none; transition: 0.2s; }
+        .chat-input-area input:focus { border-color: var(--purple); }
+        .send-btn { background: var(--purple); color: white; border: none; border-radius: 12px; width: 44px; height: 44px; font-size: 18px; cursor: pointer; transition: 0.2s; }
+        .send-btn:hover { background: var(--purple-dark); }
+
+        .wellness-tip { margin-top: 24px; background: linear-gradient(135deg, #e0dcff, #d5f4ee); border-radius: 16px; padding: 22px 26px; display: flex; gap: 16px; align-items: flex-start; }
+        .tip-icon { font-size: 32px; flex-shrink: 0; }
+        .tip-content h4 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+        .tip-content p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo">🧠 CalmMind</div>
+    <a href="/">🏠 Home</a>
+    <a href="/dashboard">📊 Dashboard</a>
+    <a href="/detect">🔍 Mental Health Check</a>
+    <a href="/psychologist" class="active">🎥 AI Psychologist</a>
+    <a href="/recommendations">💡 Recommendations</a>
+    <a href="/mood">😊 Mood Tracker</a>
+    <a href="/stress">😤 Stress Management</a>
+    <a href="/mindfulness">🌿 Mindfulness</a>
+    <a href="/anxiety">💭 Anxiety Help</a>
+    <a href="/about">ℹ️ About</a>
+    <a href="/contact">✉️ Contact</a>
+</div>
+
+<div class="main">
+    <div class="page-header">
+        <h1>AI Psychologist Session</h1>
+        <p>Have a private conversation with your AI therapist. Choose a topic, then start your session.</p>
+    </div>
+
+    <div class="session-layout">
+        <div>
+            <div class="video-panel">
+
+                <!-- Header -->
+                <div class="video-header">
+                    <div class="psychologist-avatar">
+                        <img src="/static/images/dr_aria.jpeg" alt="Dr. Aria">
+                    </div>
+                    <div class="psychologist-info">
+                        <h3>Dr. Aria — AI Psychologist</h3>
+                        <span>Cognitive Behavioural Therapy · Mindfulness · Anxiety</span>
+                    </div>
+                    <div class="live-badge"><div class="live-dot"></div> LIVE</div>
+                </div>
+
+                <!-- Full photo video stage -->
+                <div class="avatar-stage" id="avatar-stage">
+
+                    <!-- Full screen photo -->
+                    <img class="avatar-photo" src="/static/images/dr_aria.jpeg" alt="Dr. Aria" id="avatar-photo">
+
+                    <!-- Overlays -->
+                    <div class="vignette"></div>
+                    <div class="speak-border"></div>
+
+                    <!-- Badges -->
+                    <div id="topic-indicator"></div>
+                    <div id="voice-indicator">
+                        <div class="vwave">
+                            <div class="vbar"></div><div class="vbar"></div>
+                            <div class="vbar"></div><div class="vbar"></div>
+                            <div class="vbar"></div>
+                        </div>
+                        Dr. Aria is speaking…
+                    </div>
+
+                    <!-- Name tag -->
+                    <div class="nametag">
+                        <strong>Dr. Aria</strong>
+                        <span>AI PSYCHOLOGIST · CBT · MINDFULNESS</span>
+                    </div>
+
+                    <!-- Lip sync bars -->
+                    <div class="lipsync">
+                        <div class="lbar"></div>
+                        <div class="lbar"></div>
+                        <div class="lbar"></div>
+                        <div class="lbar"></div>
+                        <div class="lbar"></div>
+                        <div class="lbar"></div>
+                        <div class="lbar"></div>
+                    </div>
+
+                    <!-- Subtitles -->
+                    <div class="subtitles" id="subtitles"></div>
+                </div>
+
+                <!-- Controls -->
+                <div class="video-controls">
+                    <button class="ctrl-btn ctrl-primary" onclick="startSession()" id="start-btn">▶ Start Session</button>
+                    <button class="ctrl-btn ctrl-secondary" onclick="pauseSession()" id="pause-btn" style="display:none">⏸ Pause</button>
+                    <button class="ctrl-btn ctrl-danger" onclick="endSession()" id="end-btn" style="display:none">⏹ End</button>
+                    <button class="ctrl-btn ctrl-mute" id="mute-btn" onclick="toggleMute()" style="display:none">🔊 Voice On</button>
+                    <span id="session-timer" style="margin-left:auto;color:var(--muted);font-size:14px;font-weight:600;display:none">00:00</span>
+                </div>
+
+                <!-- Topic pills -->
+                <div class="topic-pills">
+                    <span style="font-size:13px;color:var(--muted);width:100%;margin-bottom:4px;font-weight:600;">CHOOSE A TOPIC:</span>
+                    <div class="topic-pill" onclick="selectTopic(this,'anxiety')">😰 Anxiety</div>
+                    <div class="topic-pill" onclick="selectTopic(this,'low mood and depression')">💙 Low Mood</div>
+                    <div class="topic-pill" onclick="selectTopic(this,'stress')">😤 Stress</div>
+                    <div class="topic-pill" onclick="selectTopic(this,'sleep problems')">😴 Sleep</div>
+                    <div class="topic-pill" onclick="selectTopic(this,'relationships')">❤️ Relationships</div>
+                    <div class="topic-pill" onclick="selectTopic(this,'self-esteem')">🌟 Self-esteem</div>
+                    <div class="topic-pill" onclick="selectTopic(this,'grief and loss')">🕊️ Grief</div>
+                    <div class="topic-pill" onclick="selectTopic(this,'general mental wellness')">💬 General Talk</div>
+                </div>
+            </div>
+
+            <div class="wellness-tip">
+                <div class="tip-icon">🌬️</div>
+                <div class="tip-content">
+                    <h4>Before you begin — try box breathing</h4>
+                    <p>Inhale for 4 seconds, hold for 4, exhale for 4, hold for 4. Repeat twice. This activates your parasympathetic nervous system and helps you feel calmer before your session.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat panel -->
+        <div class="chat-panel">
+            <div class="chat-panel-header">
+                💬 Session Chat
+                <span style="margin-left:auto;font-size:12px;color:var(--muted);font-weight:400;">Private & secure</span>
+            </div>
+            <div id="chat-messages">
+                <div class="msg msg-ai">
+                    <div class="msg-name">Dr. Aria</div>
+                    Hello! I'm Dr. Aria, your AI psychologist. I'm here to listen without judgment. Please select a topic above, then press "Start Session" whenever you're ready. 💜
+                </div>
+            </div>
+            <div class="typing-indicator" id="typing">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="user-input" placeholder="Type how you're feeling…" onkeydown="if(event.key==='Enter') sendMsg()">
+                <button class="send-btn" onclick="sendMsg()">→</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedTopic = 'general mental wellness';
+let sessionActive = false;
+let timerInterval = null;
+let seconds = 0;
+let conversationHistory = [];
+let voiceMuted = false;
+
+const savedResult = JSON.parse(sessionStorage.getItem('calmmind_result') || 'null');
+
+// ── Voice ─────────────────────────────────────────────────────────────────────
+const synth = window.speechSynthesis;
+let voices = [];
+function loadVoices() { voices = synth.getVoices(); }
+speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices();
+
+function getBestVoice() {
+    const preferred = ['Google UK English Female','Microsoft Zira','Microsoft Hazel','Samantha','Karen','Moira','Tessa'];
+    for (const name of preferred) {
+        const v = voices.find(v => v.name.includes(name));
+        if (v) return v;
+    }
+    return voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('female'))
+        || voices.find(v => v.lang.startsWith('en'))
+        || voices[0] || null;
+}
+
+function speakText(text) {
+    if (!synth || voiceMuted) return;
+    synth.cancel();
+    const clean = text.replace(/[\u{1F000}-\u{1FFFF}]/gu, '').replace(/[\u2600-\u27FF]/g, '').trim();
+    const utt = new SpeechSynthesisUtterance(clean);
+    utt.voice = getBestVoice();
+    utt.rate = 0.9; utt.pitch = 1.05; utt.volume = 1.0;
+    utt.onstart = () => { startSpeaking(); showSubtitle(text); document.getElementById('voice-indicator').style.display = 'flex'; };
+    utt.onend   = () => { stopSpeaking();  document.getElementById('voice-indicator').style.display = 'none'; };
+    utt.onerror = () => { stopSpeaking();  document.getElementById('voice-indicator').style.display = 'none'; };
+    synth.speak(utt);
+}
+
+function stopVoice() {
+    synth.cancel(); stopSpeaking();
+    document.getElementById('voice-indicator').style.display = 'none';
+}
+
+// ── Topic ─────────────────────────────────────────────────────────────────────
+function selectTopic(el, topic) {
+    document.querySelectorAll('.topic-pill').forEach(p => p.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedTopic = topic;
+    const ind = document.getElementById('topic-indicator');
+    ind.textContent = '🎯 ' + el.textContent.trim();
+    ind.style.display = 'block';
+    if (sessionActive) {
+        addAIMessage(`I'll now focus our session on <strong>${el.textContent.trim()}</strong>. What would you like to share about this?`);
+    }
+}
+
+// ── Session ───────────────────────────────────────────────────────────────────
+function startSession() {
+    sessionActive = true;
+    document.getElementById('start-btn').style.display = 'none';
+    document.getElementById('pause-btn').style.display = 'flex';
+    document.getElementById('end-btn').style.display = 'flex';
+    document.getElementById('mute-btn').style.display = 'flex';
+    document.getElementById('session-timer').style.display = 'block';
+    startTimer();
+    playOpeningMessage();
+}
+
+function pauseSession() {
+    if (sessionActive) {
+        clearInterval(timerInterval); sessionActive = false; synth.pause();
+        document.getElementById('pause-btn').innerHTML = '▶ Resume';
+    } else {
+        sessionActive = true; synth.resume(); startTimer();
+        document.getElementById('pause-btn').innerHTML = '⏸ Pause';
+    }
+}
+
+function endSession() {
+    clearInterval(timerInterval); sessionActive = false; stopVoice();
+    document.getElementById('start-btn').style.display = 'flex';
+    document.getElementById('pause-btn').style.display = 'none';
+    document.getElementById('end-btn').style.display = 'none';
+    document.getElementById('mute-btn').style.display = 'none';
+    const bye = 'Thank you for this session. Remember, small steps matter. Take care of yourself, and come back whenever you need. 💜';
+    addAIMessage(bye);
+    speakText(bye);
+}
+
+function startTimer() {
+    timerInterval = setInterval(() => {
+        seconds++;
+        const m = String(Math.floor(seconds/60)).padStart(2,'0');
+        const s = String(seconds%60).padStart(2,'0');
+        document.getElementById('session-timer').textContent = m+':'+s;
+    }, 1000);
+}
+
+// ── AI calls ──────────────────────────────────────────────────────────────────
+async function playOpeningMessage() {
+    conversationHistory = [];
+    showTyping();
+    try {
+        const resp = await fetch('/api/psychologist/open', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({topic: selectedTopic, assessment: savedResult})
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
+        conversationHistory.push({role:'user', content:'Opening for topic: '+selectedTopic});
+        conversationHistory.push({role:'assistant', content:data.reply});
+        hideTyping();
+        addAIMessage(data.reply);
+        speakText(data.reply);
+    } catch(e) {
+        hideTyping();
+        const fb = 'Hello, I am so glad you are here. This is a safe space to talk. What has been on your mind lately?';
+        addAIMessage(fb); speakText(fb);
+        console.error('Open error:', e);
+    }
+}
+
+async function sendMsg() {
+    const input = document.getElementById('user-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    stopVoice();
+
+    const d = document.createElement('div');
+    d.className = 'msg msg-user';
+    d.innerHTML = '<div class="msg-name">You</div>' + msg;
+    document.getElementById('chat-messages').appendChild(d);
+    scrollChat();
+
+    conversationHistory.push({role:'user', content:msg});
+    showTyping();
+
+    try {
+        const resp = await fetch('/api/psychologist/chat', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({topic:selectedTopic, history:conversationHistory, assessment:savedResult})
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
+        conversationHistory.push({role:'assistant', content:data.reply});
+        hideTyping();
+        addAIMessage(data.reply);
+        speakText(data.reply);
+    } catch(e) {
+        hideTyping();
+        const fb = 'I hear you, and I appreciate you sharing. Could you tell me a little more about what you have been experiencing?';
+        addAIMessage(fb); speakText(fb);
+        console.error('Chat error:', e);
+    }
+}
+
+// ── UI ────────────────────────────────────────────────────────────────────────
+function addAIMessage(text) {
+    const d = document.createElement('div');
+    d.className = 'msg msg-ai';
+    d.innerHTML = '<div class="msg-name">Dr. Aria</div>' + text;
+    document.getElementById('chat-messages').appendChild(d);
+    scrollChat();
+}
+function scrollChat() { const b = document.getElementById('chat-messages'); b.scrollTop = b.scrollHeight; }
+function showTyping() { document.getElementById('typing').style.display = 'flex'; scrollChat(); }
+function hideTyping() { document.getElementById('typing').style.display = 'none'; }
+function startSpeaking() { document.getElementById('avatar-stage').classList.add('speaking'); }
+function stopSpeaking()  { document.getElementById('avatar-stage').classList.remove('speaking'); }
+function showSubtitle(text) {
+    const s = document.getElementById('subtitles');
+    s.style.display = 'block'; s.textContent = text;
+    setTimeout(() => { s.style.display = 'none'; }, Math.min(text.length * 65, 10000));
+}
+function toggleMute() {
+    voiceMuted = !voiceMuted;
+    const btn = document.getElementById('mute-btn');
+    if (voiceMuted) { synth.cancel(); stopSpeaking(); btn.textContent = '🔇 Voice Off'; btn.classList.add('muted'); }
+    else            { btn.textContent = '🔊 Voice On'; btn.classList.remove('muted'); }
+}
+</script>
+</body>
+</html>

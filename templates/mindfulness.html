@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mindfulness Techniques - CalmMind</title>
+    <style>
+        body {margin:0; font-family:'Segoe UI', sans-serif; display:flex; background:#f0f8ff;}
+        .sidebar {
+            height:100vh; width:200px; background-color:#6c63ff; display:flex; flex-direction:column; padding-top:30px; position:fixed; left:0; top:0;
+        }
+        .sidebar a {color:white; padding:15px 20px; text-decoration:none; font-size:18px; transition:0.3s;}
+        .sidebar a:hover {background-color:#574fd6;}
+        .main {margin-left:200px; flex:1; padding:50px;}
+        h1 {color:#2c3e50; font-size:36px; margin-bottom:20px;}
+        p {font-size:18px; color:#555; line-height:1.6;}
+        ul {margin-top:20px;}
+        li {margin-bottom:10px;}
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body>
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+
+<div class="sidebar" style="">
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/test">Start Assessment</a>
+    <a href="/mindfulness">Mindfulness</a>
+    <a href="/stress">Stress Management</a>
+    <a href="/anxiety">Anxiety Resources</a>
+    <a href="/mood">Mood Tracker</a>
+    <a href="/selfcare">Self-Care Tips</a>
+    <a href="/analyze">Mind Analysis</a>
+    <a href="/about">About</a>
+    <a href="/resources">Resources</a>
+    <a href="/contact">Contact</a>
+    
+</div>
+
+<div class="main">
+    <h1>Mindfulness Techniques</h1>
+    <p>Mindfulness helps you stay present and reduces stress. Here are a few techniques to practice daily:</p>
+    <ul>
+        <li>Deep Breathing: Focus on your inhale and exhale for 5-10 minutes.</li>
+        <li>Body Scan: Pay attention to sensations from head to toe.</li>
+        <li>Mindful Walking: Walk slowly and notice each step and breath.</li>
+        <li>Gratitude Journaling: Note 3 things you are grateful for each day.</li>
+        <li>Meditation Apps: Use apps like Calm or Headspace for guided sessions.</li>
+    </ul>
+</div>
+
+</body>
+</html>

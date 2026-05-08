@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Anxiety Resources - CalmMind</title>
+    <style>
+        body {
+            margin:0;
+            font-family:'Segoe UI', sans-serif;
+            display:flex;
+            background: linear-gradient(135deg, #a8edea, #fed6e3);
+            min-height:100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            height:100vh;
+            width:220px;
+            background-color:#6c63ff;
+            display:flex;
+            flex-direction:column;
+            padding-top:30px;
+            position:fixed;
+            left:0;
+            top:0;
+            box-shadow: 3px 0 15px rgba(0,0,0,0.1);
+        }
+        .sidebar a {
+            color:white;
+            padding:15px 25px;
+            text-decoration:none;
+            font-size:18px;
+            margin:5px 0;
+            border-radius:0 25px 25px 0;
+            transition:0.3s;
+        }
+        .sidebar a:hover {
+            background-color:#574fd6;
+            transform: scale(1.05);
+        }
+
+        /* Main content */
+        .main {
+            margin-left:220px;
+            padding:50px;
+            animation: fadeIn 1.2s ease-in-out;
+            display:flex;
+            flex-direction:column;
+            gap:20px;
+        }
+
+        h1 {color:#2c3e50; font-size:42px; margin-bottom:20px; text-align:center;}
+        p {font-size:20px; color:#555; line-height:1.6; text-align:center;}
+
+        /* Cards for resources */
+        .resource-card {
+            background:white;
+            padding:20px 25px;
+            border-radius:20px;
+            box-shadow:0 8px 25px rgba(0,0,0,0.15);
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .resource-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow:0 12px 30px rgba(0,0,0,0.2);
+        }
+
+        .resource-card a {
+            color:#3636b4;
+            font-size:18px;
+            text-decoration:none;
+            font-weight:bold;
+            transition: 0.3s;
+        }
+        .resource-card a:hover {
+            text-decoration:underline;
+        }
+
+        .icon {
+            font-size:32px;
+            margin-right:15px;
+        }
+
+        @keyframes fadeIn {
+            from {opacity:0; transform:translateY(20px);}
+            to {opacity:1; transform:translateY(0);}
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body>
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+
+<div class="sidebar" style="">
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/test">Start Assessment</a>
+    <a href="/mindfulness">Mindfulness</a>
+    <a href="/stress">Stress Management</a>
+    <a href="/anxiety">Anxiety Resources</a>
+    <a href="/mood">Mood Tracker</a>
+    <a href="/selfcare">Self-Care Tips</a>
+    <a href="/analyze">Mind Analysis</a>
+    <a href="/about">About</a>
+    <a href="/resources">Resources</a>
+    <a href="/contact">Contact</a>
+    
+</div>
+
+<div class="main">
+    <h1>Anxiety Resources</h1>
+    <p>Explore these trusted resources to help manage anxiety and improve mental well-being.</p>
+
+    <div class="resource-card">
+        <span class="icon">🧠</span>
+        <a href="https://www.anxietycanada.com" target="_blank">Anxiety Canada</a>
+    </div>
+    <div class="resource-card">
+        <span class="icon">🌐</span>
+        <a href="https://adaa.org" target="_blank">Anxiety & Depression Association of America</a>
+    </div>
+    <div class="resource-card">
+        <span class="icon">📚</span>
+        <a href="https://www.nimh.nih.gov/health/topics/anxiety-disorders" target="_blank">NIMH Anxiety Disorders</a>
+    </div>
+    <div class="resource-card">
+        <span class="icon">🧘‍♂️</span>
+        <a href="https://www.headspace.com" target="_blank">Headspace Meditation App</a>
+    </div>
+</div>
+
+</body>
+</html>
