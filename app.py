@@ -5,7 +5,7 @@ import json
 
 app = Flask(__name__)
 
-OPENROUTER_KEY = "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"  # Get free key at openrouter.ai → Keys → Create
+OPENROUTER_KEY = "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"  # Get free key at openrouter.ai → Keys → Create
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 OPENROUTER_MODEL = "openrouter/auto"  # Auto-picks a working free model every time
 
