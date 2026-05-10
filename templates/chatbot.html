@@ -48,6 +48,8 @@
             flex:1;
             padding:20px;
             overflow-y:auto;
+            display:flex;
+            flex-direction:column;
         }
 
         .message {
@@ -67,6 +69,15 @@
         .bot {
             background:white;
             box-shadow:0 5px 15px rgba(0,0,0,0.1);
+            align-self:flex-start;
+        }
+
+        .typing {
+            background:white;
+            box-shadow:0 5px 15px rgba(0,0,0,0.1);
+            align-self:flex-start;
+            color:#999;
+            font-style:italic;
         }
 
         .input-area {
@@ -91,6 +102,11 @@
             color:white;
             cursor:pointer;
         }
+
+        button:disabled {
+            background:#aaa;
+            cursor:not-allowed;
+        }
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
@@ -100,7 +116,6 @@
     <span></span><span></span><span></span>
 </button>
 <div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
-
 
 <div class="sidebar">
     <a href="/">Home</a>
@@ -112,44 +127,87 @@
     <div class="chat-box" id="chatBox"></div>
 
     <div class="input-area">
-        <input type="text" id="userInput" placeholder="Talk to CalmMind...">
-        <button onclick="sendMessage()">Send</button>
+        <input type="text" id="userInput" placeholder="Talk to CalmMind..." onkeydown="if(event.key==='Enter') sendMessage()">
+        <button id="sendBtn" onclick="sendMessage()">Send</button>
     </div>
 </div>
 
 <script>
-function sendMessage() {
-    let input = document.getElementById("userInput");
-    let message = input.value;
+    let chatHistory = [];
 
-    if(message.trim() === "") return;
+    // Welcome message on load
+    window.onload = function() {
+        appendBot("Hi there! 😊 I'm CalmMind Assistant. I'm here to support your mental wellness journey. How are you feeling today?");
+    };
 
-    let chatBox = document.getElementById("chatBox");
-
-    // User message
-    let userDiv = document.createElement("div");
-    userDiv.className = "message user";
-    userDiv.innerText = message;
-    chatBox.appendChild(userDiv);
-
-    // Send to backend
-    fetch("/chat", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({message: message})
-    })
-    .then(res => res.json())
-    .then(data => {
+    function appendBot(text) {
+        let chatBox = document.getElementById("chatBox");
         let botDiv = document.createElement("div");
         botDiv.className = "message bot";
-        botDiv.innerText = data.reply;
+        botDiv.innerText = text;
         chatBox.appendChild(botDiv);
-
         chatBox.scrollTop = chatBox.scrollHeight;
-    });
+        return botDiv;
+    }
 
-    input.value = "";
-}
+    function sendMessage() {
+        let input   = document.getElementById("userInput");
+        let sendBtn = document.getElementById("sendBtn");
+        let message = input.value.trim();
+
+        if (message === "") return;
+
+        let chatBox = document.getElementById("chatBox");
+
+        // Show user message
+        let userDiv = document.createElement("div");
+        userDiv.className = "message user";
+        userDiv.innerText = message;
+        chatBox.appendChild(userDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // Add to history
+        chatHistory.push({ role: "user", content: message });
+
+        input.value = "";
+        input.disabled = true;
+        sendBtn.disabled = true;
+
+        // Typing indicator
+        let typingDiv = document.createElement("div");
+        typingDiv.className = "message typing";
+        typingDiv.innerText = "CalmMind is typing...";
+        chatBox.appendChild(typingDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: message, history: chatHistory })
+        })
+        .then(res => res.json())
+        .then(data => {
+            typingDiv.remove();
+
+            let botDiv = document.createElement("div");
+            botDiv.className = "message bot";
+            botDiv.innerText = data.reply;
+            chatBox.appendChild(botDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Add assistant reply to history
+            chatHistory.push({ role: "assistant", content: data.reply });
+        })
+        .catch(() => {
+            typingDiv.remove();
+            appendBot("Sorry, something went wrong. Please try again.");
+        })
+        .finally(() => {
+            input.disabled = false;
+            sendBtn.disabled = false;
+            input.focus();
+        });
+    }
 </script>
 
 </body>
