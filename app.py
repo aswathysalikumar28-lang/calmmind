@@ -5,57 +5,50 @@ import json
 
 app = Flask(__name__)
 
-GEMINI_KEY = "AIzaSyCuS8YZUrmkUaBsYUOTkl5Zz2voBlAUwW0"
-
-GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
+OPENROUTER_KEY = "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"  # Get free key at openrouter.ai → Keys → Create
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+OPENROUTER_MODEL = "openrouter/auto"  # Auto-picks a working free model every time
 
 results_history = []
 
 
 def ask_ai(messages, system=None, max_tokens=600):
-    contents = []
+    ai_messages = []
 
     if system:
-        contents.append({
-            "role": "user",
-            "parts": [{"text": f"[Instructions for you]: {system}\n\nAcknowledge these instructions briefly."}]
-        })
-        contents.append({
-            "role": "model",
-            "parts": [{"text": "Understood. I will follow those instructions."}]
-        })
+        ai_messages.append({"role": "system", "content": system})
 
     for msg in messages:
-        role = "model" if msg["role"] == "assistant" else "user"
-        contents.append({
-            "role": role,
-            "parts": [{"text": msg["content"]}]
-        })
+        ai_messages.append({"role": msg["role"], "content": msg["content"]})
 
     payload = json.dumps({
-        "contents": contents,
-        "generationConfig": {
-            "maxOutputTokens": max_tokens,
-            "temperature": 0.7
-        }
+        "model": OPENROUTER_MODEL,
+        "messages": ai_messages,
+        "max_tokens": max_tokens,
+        "temperature": 0.7
     }).encode("utf-8")
 
     req = urllib.request.Request(
-        GEMINI_URL,
+        OPENROUTER_URL,
         data=payload,
-        headers={"Content-Type": "application/json"}
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {OPENROUTER_KEY}",
+            "HTTP-Referer": "http://localhost:5000",
+            "X-Title": "CalmMind"
+        }
     )
 
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
             result = json.loads(resp.read())
-            return result["candidates"][0]["content"]["parts"][0]["text"]
+            return result["choices"][0]["message"]["content"]
     except urllib.error.HTTPError as e:
         body = e.read().decode()
-        print(f"[GEMINI ERROR {e.code}] {body}")
-        raise RuntimeError(f"Gemini {e.code}: {body}")
+        print(f"[AI ERROR {e.code}] {body}")
+        raise RuntimeError(f"AI {e.code}: {body}")
     except Exception as e:
-        print(f"[GEMINI ERROR] {type(e).__name__}: {e}")
+        print(f"[AI ERROR] {type(e).__name__}: {e}")
         raise
 
 
@@ -153,8 +146,10 @@ def api_detect():
     domains = body.get('domains', [])
     pct     = body.get('pct', 50)
 
+    system = "You are a clinical psychologist AI. Reply with ONLY raw JSON, no markdown, no extra text."
+
     prompt = (
-        "You are a clinical psychologist AI. User mental health screening (0=best, 3=worst): "
+        "User mental health screening (0=best, 3=worst): "
         + ", ".join(d['cat'] + ": " + str(d['score']) + "/3" for d in domains)
         + ". Overall severity: " + str(pct) + "%. "
         + "Reply with ONLY this JSON, no markdown, no extra text: "
@@ -165,7 +160,7 @@ def api_detect():
     )
 
     try:
-        text   = ask_ai([{"role": "user", "content": prompt}], max_tokens=300)
+        text   = ask_ai([{"role": "user", "content": prompt}], system=system, max_tokens=300)
         clean  = text.strip().replace("```json","").replace("```","").strip()
         result = json.loads(clean)
         return jsonify(result)
@@ -254,8 +249,10 @@ def api_recommendations():
     body       = request.get_json()
     assessment = body.get('assessment', {})
 
+    system = "You are a mental health advisor. Reply with ONLY raw JSON, no markdown, no extra text."
+
     prompt = (
-        "Mental health advisor. User: distress=" + assessment.get('overall','Moderate')
+        "User: distress=" + assessment.get('overall','Moderate')
         + ", mood=" + str(assessment.get('mood_pct',50)) + "%"
         + ", anxiety=" + str(assessment.get('anxiety_pct',50)) + "%"
         + ", stress=" + str(assessment.get('stress_pct',50)) + "%. "
@@ -266,7 +263,7 @@ def api_recommendations():
     )
 
     try:
-        text   = ask_ai([{"role": "user", "content": prompt}], max_tokens=1200)
+        text   = ask_ai([{"role": "user", "content": prompt}], system=system, max_tokens=1200)
         clean  = text.strip().replace("```json","").replace("```","").strip()
         result = json.loads(clean)
         return jsonify(result)
@@ -294,18 +291,28 @@ def api_recommendations():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    user_message = request.json.get("message", "").lower()
-    if "mood"        in user_message: reply = "Mood Tracker helps you log daily emotions and understand patterns."
-    elif "stress"    in user_message: reply = "Stress Management provides breathing and relaxation techniques."
-    elif "mindful"   in user_message: reply = "Mindfulness helps you stay present using meditation exercises."
-    elif "anxiety"   in user_message: reply = "Anxiety section gives you insights and ways to manage anxiety."
-    elif "selfcare"  in user_message or "self care" in user_message: reply = "Self-care includes habits that improve your mental and physical health."
-    elif "dashboard" in user_message: reply = "Dashboard shows your past results and progress."
-    elif "detect"    in user_message or "check" in user_message: reply = "Try /detect for an AI mental health check!"
-    elif "psycholog" in user_message or "therapy" in user_message: reply = "Visit /psychologist to talk to Dr. Aria your AI therapist."
-    elif "recommend" in user_message: reply = "Visit /recommendations for your personalised wellness plan."
-    elif "hello"     in user_message or "hi" in user_message: reply = "Hello! 😊 Try /detect, /psychologist, or /recommendations!"
-    else: reply = "I can help with mood, stress, mindfulness, anxiety, and our AI features."
+    data         = request.get_json()
+    user_message = data.get("message", "")
+    history      = data.get("history", [])
+
+    system = (
+        "You are CalmMind Assistant, a friendly and empathetic mental health chatbot for the CalmMind website. "
+        "You help users with mood tracking, stress management, mindfulness, anxiety, and self-care. "
+        "The website has these pages: /detect (AI mental health check), /psychologist (talk to Dr. Aria, AI therapist), "
+        "/recommendations (personalised wellness plan), /mood, /stress, /mindfulness, /anxiety, /selfcare, /dashboard. "
+        "Keep responses short (2-3 sentences max), warm, and supportive. "
+        "If someone asks who or what you are, introduce yourself as CalmMind Assistant, a supportive mental wellness chatbot. "
+        "Suggest relevant pages when appropriate. Never diagnose or replace professional help."
+    )
+
+    messages = history + [{"role": "user", "content": user_message}]
+
+    try:
+        reply = ask_ai(messages, system=system, max_tokens=150)
+    except Exception as e:
+        print(f"[CHAT ERROR] {e}")
+        reply = "I'm here to help with mood, stress, mindfulness, anxiety, and our AI features. How can I support you today?"
+
     return jsonify({"reply": reply})
 
 
